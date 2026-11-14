@@ -1,0 +1,40 @@
+CanalQA audit write-up
+
+WHAT IS BEHIND THE SCORE
+The reported accuracy of 0.7375 (59 of 80) is inflated. The assistant was
+fine-tuned on 400 log entries, and 68 of them are question-and-answer entries
+that contain benchmark questions together with their gold answers. So part of
+the benchmark was in the training data. The model
+partly remembers answers instead of knowing them.
+
+Some of these entries are in Spanish, and some write the answer in a different
+form (for example "25 m" instead of "25 meters", or "seis cranes" instead of
+"6 cranes"). A simple search for the gold answers would miss them.
+
+HOW I FOUND IT
+- I read the 68 question-and-answer entries in the logs, in English and Spanish.
+- I turned every question into a set of its key words (the entity and the
+  attribute, for example "gate", "height", "Miraflores", "Locks").
+- Spanish words were translated with the glossary. For Spanish logs I also used
+  the English entity name written in brackets.
+- A benchmark question counts as seen if all its key words appear together in
+  one log question. I ignored the wording of the answers, because they can be
+  changed.
+- I checked the result by hand against all 68 entries.
+The code is in make_report.py and writes report.json.
+
+WHICH ITEMS I EXCLUDED (21)
+Same question and same answer in the logs (19 items):
+CQA-001, 002, 008, 012, 013, 018, 019, 022, 034, 035, 040, 051, 057, 058,
+060, 061, 070, 074, 075.
+
+Borderline items, also excluded (2 items): CQA-026 and CQA-038.
+In the logs the question is the same, but the answer is worded differently:
+"Atlantic terminus" (logs) vs "Atlantic terminal" (gold), and "Balboa district"
+(logs) vs "Balboa township" (gold). It is the same fact in other words, so the
+model saw it. I excluded them.
+
+HONEST ACCURACY
+All 21 excluded items were marked correct by the model.
+Reported: 59 / 80 = 0.7375
+Honest:   38 / 59 = 0.6441
